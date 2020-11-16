@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{E2ACB42E-9B8E-47E7-B9A2-710E2B6BE9B1}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>PPBot</RootNamespace>
-    <AssemblyName>PPBot</AssemblyName>
+    <RootNamespace>TRBBLBot</RootNamespace>
+    <AssemblyName>TRBBLBot</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

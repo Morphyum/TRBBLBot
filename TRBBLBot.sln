@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29926.136
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PPBot", "PPBot\PPBot.csproj", "{E2ACB42E-9B8E-47E7-B9A2-710E2B6BE9B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TRBBLBot", "TRBBLBot\TRBBLBot.csproj", "{E2ACB42E-9B8E-47E7-B9A2-710E2B6BE9B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
