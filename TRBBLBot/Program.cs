@@ -53,7 +53,7 @@ namespace PPBot
         private async Task UserJoined(SocketGuildUser arg) {
             SocketTextChannel channel = (SocketTextChannel)client.GetChannel(473036518454329365);
             var role = (arg as IGuildUser).Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "admin");
-            await channel.SendMessageAsync(arg.Mention + welcomeText);
+            await channel.SendMessageAsync("Welcome " + arg.Mention + ",\n" + welcomeText);
         }
 
         private Task Log(LogMessage msg) {
