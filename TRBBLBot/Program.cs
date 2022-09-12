@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -21,6 +22,7 @@ namespace PPBot {
             client.UserJoined += UserJoined;
             client.MessageReceived += MessageReceived;
             client.SlashCommandExecuted += SlashCommandExecuted;
+            client.ModalSubmitted += ModalSubmitted;
             var token = Secret.token; // Remember to keep this private!
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
@@ -30,16 +32,14 @@ namespace PPBot {
         }
 
         public async Task Ready() {
+            List<ApplicationCommandProperties> applicationCommandProperties = new List<ApplicationCommandProperties>();
             var globalCommand = new SlashCommandBuilder();
             globalCommand.WithName("set-welcome");
             globalCommand.WithDescription("Change the welcome message");
-            globalCommand.AddOption(new SlashCommandOptionBuilder()
-                .WithName("message")
-                .WithRequired(true)
-                .WithDescription("The new message").WithType(ApplicationCommandOptionType.String)
-            );
             var command = globalCommand.Build();
-            await client.CreateGlobalApplicationCommandAsync(command);
+            applicationCommandProperties.Add(command);
+
+            await client.BulkOverwriteGlobalApplicationCommandsAsync(applicationCommandProperties.ToArray());
         }
         private async Task MessageReceived(SocketMessage arg) {
             //Normal command go here
@@ -54,12 +54,27 @@ namespace PPBot {
                 }
             }
         }
+        private async Task ModalSubmitted(SocketModal modal) {
+            if(modal.Data.CustomId.Equals("welcome_message_modal")) {
+                welcomeText = modal.Data.Components.ToList().First(x => x.CustomId == "welcome_message_text").Value;
+                SaveWelcome();
+                var embeded = new EmbedBuilder()
+                    .WithTitle("New Welcome Message was Set")
+                    .WithDescription(welcomeText)
+                    .WithAuthor(modal.User)
+                    .WithCurrentTimestamp();
+                    
+                await modal.RespondAsync(embed: embeded.Build());
+            }
 
+        }
         private async Task SlashCommandExecuted(SocketSlashCommand command) {
             if(command.CommandName.Equals("set-welcome")) {
-                welcomeText = (string)command.Data.Options.First().Value;
-                SaveWelcome();
-                await command.RespondAsync(welcomeText);
+                var mb = new ModalBuilder()
+                    .WithTitle("Welcome Message")
+                    .WithCustomId("welcome_message_modal")
+                    .AddTextInput("New Welcome Message", "welcome_message_text", TextInputStyle.Paragraph);
+                await command.RespondWithModalAsync(mb.Build());
             }
 
         }
