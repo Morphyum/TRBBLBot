@@ -11,11 +11,15 @@ namespace PPBot {
                     "\nAs well as the league we also run side competitions.The main one is the perpetual ladder which is great for finding random games.They're just for fun but do allow you to play more between league games. Help on joining the ladder can be found at <#479662400640122890>. " +
                     "\nOther than that just look around and get involved.We've got plenty of opportunity to chat outside of just scheduling games so please feel free to get involved.If you've got any questions feel free to ask but make sure you include the <@&473036877524369459> tag so we know the question is there." +
                     "\n\nAlso check out the new coach primer pinned in this channel.https://docs.google.com/document/d/1";
-        private static DiscordSocketClient client = new DiscordSocketClient();
+        private DiscordSocketClient client;
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
 
         public async Task MainAsync() {
+            var config = new DiscordSocketConfig() {
+                GatewayIntents = GatewayIntents.All
+            };
+            client = new DiscordSocketClient(config);
             LoadWelcome();
             client.Ready += Ready;
             client.Log += Log;
@@ -63,7 +67,7 @@ namespace PPBot {
                     .WithDescription(welcomeText)
                     .WithAuthor(modal.User)
                     .WithCurrentTimestamp();
-                    
+
                 await modal.RespondAsync(embed: embeded.Build());
             }
 
