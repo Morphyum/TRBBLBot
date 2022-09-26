@@ -1,8 +1,10 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace PPBot {
@@ -43,6 +45,13 @@ namespace PPBot {
             var command = globalCommand.Build();
             applicationCommandProperties.Add(command);
 
+            globalCommand = new SlashCommandBuilder();
+            globalCommand.WithName("schedule");
+            globalCommand.WithDescription("Show the schedule for a competition");
+            globalCommand.AddOption("competition", ApplicationCommandOptionType.String, "The name of the Competition", true);
+            command = globalCommand.Build();
+            applicationCommandProperties.Add(command);
+
             await client.BulkOverwriteGlobalApplicationCommandsAsync(applicationCommandProperties.ToArray());
         }
         private async Task MessageReceived(SocketMessage arg) {
@@ -79,8 +88,47 @@ namespace PPBot {
                     .WithCustomId("welcome_message_modal")
                     .AddTextInput("New Welcome Message", "welcome_message_text", TextInputStyle.Paragraph);
                 await command.RespondWithModalAsync(mb.Build());
-            }
+            } else if(command.CommandName.Equals("schedule")) {
+                var url = string.Format("https://www.mordrek.com:666/api/comp/id/schedule");
+                var comp = (string)command.Data.Options.ToList().First().Value;
+                url = url.Replace("id", comp);
+                var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+                var jsonString = await client.GetStringAsync(url);
+                var token = JToken.Parse(jsonString);
+                int roundId = (int)token["cols"]["round"];
+                int homeTeamId = (int)token["cols"]["team_name_home"];
+                int awayTeamId = (int)token["cols"]["team_name_away"];
+                var newestRound = 0;
+                //Filter for only games without score to get newest unpalyed round.
+                foreach(var row in token["rows"]) {
+                    var values = row.Values<string>();
+                    var rowRound = values.ToList<string>()[roundId];
+                    if(int.Parse(rowRound) > newestRound) {
+                        newestRound = int.Parse(rowRound);
+                    }
+                }
+                var matches = new Dictionary<string, string>();
+                foreach(var row in token["rows"]) {
+                    var values = row.Values<string>();
+                    var valueList = values.ToList<string>();
+                    var rowRound = valueList[roundId];
+                    if(int.Parse(rowRound) == newestRound) {
+                        matches.Add(valueList[homeTeamId], valueList[awayTeamId]);
+                    }
+                }
+                var matchText = "";
+                foreach(var match in matches) {
+                    matchText += "\n " + match.Key + " vs " + match.Value;
+                }
+                var embeded = new EmbedBuilder()
+                                    .WithTitle("Schedule")
+                                    .WithDescription("Schedule of " + comp + " for day " + newestRound +": " + matchText)
+                                    .WithAuthor(command.User)
+                                    .WithCurrentTimestamp();
 
+                await command.RespondAsync(embed: embeded.Build());
+            }
         }
 
         private async Task UserJoined(SocketGuildUser arg) {
