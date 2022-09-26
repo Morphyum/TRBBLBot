@@ -26,7 +26,6 @@ namespace PPBot {
             client.Ready += Ready;
             client.Log += Log;
             client.UserJoined += UserJoined;
-            client.MessageReceived += MessageReceived;
             client.SlashCommandExecuted += SlashCommandExecuted;
             client.ModalSubmitted += ModalSubmitted;
             var token = Secret.token; // Remember to keep this private!
@@ -54,19 +53,7 @@ namespace PPBot {
 
             await client.BulkOverwriteGlobalApplicationCommandsAsync(applicationCommandProperties.ToArray());
         }
-        private async Task MessageReceived(SocketMessage arg) {
-            //Normal command go here
 
-            //Admin commands go here
-            if(isAdmin(arg.Author as IGuildUser)) {
-                if(arg.Content.StartsWith("!setwelcome ")) {
-                    welcomeText = arg.Content.Replace("!setwelcome ", "");
-                    SaveWelcome();
-                    await arg.Channel.SendMessageAsync(welcomeText);
-
-                }
-            }
-        }
         private async Task ModalSubmitted(SocketModal modal) {
             if(modal.Data.CustomId.Equals("welcome_message_modal")) {
                 welcomeText = modal.Data.Components.ToList().First(x => x.CustomId == "welcome_message_text").Value;
