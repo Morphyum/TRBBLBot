@@ -47,7 +47,7 @@ namespace PPBot {
             globalCommand = new SlashCommandBuilder();
             globalCommand.WithName("schedule");
             globalCommand.WithDescription("Show the schedule for a competition");
-            globalCommand.AddOption("competition", ApplicationCommandOptionType.String, "The name of the Competition", true);
+            globalCommand.AddOption("competition", ApplicationCommandOptionType.String, "The name of the competition", true);
             command = globalCommand.Build();
             applicationCommandProperties.Add(command);
 
@@ -83,38 +83,66 @@ namespace PPBot {
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
                 var jsonString = await client.GetStringAsync(url);
                 var token = JToken.Parse(jsonString);
-                int roundId = (int)token["cols"]["round"];
-                int homeTeamId = (int)token["cols"]["team_name_home"];
-                int awayTeamId = (int)token["cols"]["team_name_away"];
+                var roundId = (int)token["cols"]["round"];
+                var homeTeamId = (int)token["cols"]["team_name_home"];
+                var awayTeamId = (int)token["cols"]["team_name_away"];
+                var scoreHomeId = (int)token["cols"]["score_home"];
+                var scoreAwayId = (int)token["cols"]["score_away"];
+                var homeCoachId = (int)token["cols"]["coach_name_home"];
+                var awayCoachId = (int)token["cols"]["coach_name_away"];
                 var newestRound = 0;
-                //Filter for only games without score to get newest unpalyed round.
+                var longestHomeCoach = 0;
+                var longestHomeTeam = 0;
+                var longestAwayCoach = 0;
+                var longestAwayTeam = 0;
+                foreach(var row in token["rows"]) {
+                    var values = row.Values<string>();
+                    if(values.ToList<string>()[scoreHomeId].Length > 0) {
+
+                        var rowRound = values.ToList<string>()[roundId];
+                        if(int.Parse(rowRound) > newestRound) {
+                            newestRound = int.Parse(rowRound);
+                        }
+                    }
+                }
                 foreach(var row in token["rows"]) {
                     var values = row.Values<string>();
                     var rowRound = values.ToList<string>()[roundId];
-                    if(int.Parse(rowRound) > newestRound) {
-                        newestRound = int.Parse(rowRound);
+                    if(int.Parse(rowRound) == newestRound) {
+                        var homeCoach = values.ToList<string>()[homeCoachId].Length;
+                        var awayCoach = values.ToList<string>()[awayCoachId].Length;
+                        var homeTeam = values.ToList<string>()[homeTeamId].Length;
+                        var awayTeam = values.ToList<string>()[awayTeamId].Length;
+                        if(homeCoach > longestHomeCoach) {
+                            longestHomeCoach = homeCoach;
+                        }
+                        if(homeTeam > longestHomeTeam) {
+                            longestHomeTeam = homeTeam;
+                        }
+                        if(awayCoach > longestAwayCoach) {
+                            longestAwayCoach = awayCoach;
+                        }
+                        if(awayTeam > longestAwayTeam) {
+                            longestAwayTeam = awayTeam;
+                        }
                     }
                 }
-                var matches = new Dictionary<string, string>();
+
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("Schedule - " + comp + " - Day " + newestRound);
+                sb.AppendLine();
                 foreach(var row in token["rows"]) {
                     var values = row.Values<string>();
                     var valueList = values.ToList<string>();
+                    var scoreHome = valueList[scoreHomeId];
+                    var scoreAway = valueList[scoreAwayId];
                     var rowRound = valueList[roundId];
                     if(int.Parse(rowRound) == newestRound) {
-                        matches.Add(valueList[homeTeamId], valueList[awayTeamId]);
+                        sb.AppendLine(String.Format("{0," + longestHomeCoach + "} {1," + longestHomeTeam + "} {2,1} vs {3,1} {4," + longestAwayTeam + "} {5," + longestAwayCoach + "}", valueList[homeCoachId], valueList[homeTeamId], scoreHome, scoreAway, valueList[awayTeamId], valueList[awayCoachId]));
                     }
                 }
-                var matchText = "";
-                foreach(var match in matches) {
-                    matchText += "\n " + match.Key + " vs " + match.Value;
-                }
-                var embeded = new EmbedBuilder()
-                                    .WithTitle("Schedule")
-                                    .WithDescription("Schedule of " + comp + " for day " + newestRound +": " + matchText)
-                                    .WithAuthor(command.User)
-                                    .WithCurrentTimestamp();
 
-                await command.RespondAsync(embed: embeded.Build());
+                await command.RespondAsync(Format.Code(sb.ToString()));
             }
         }
 
