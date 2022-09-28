@@ -89,17 +89,17 @@ namespace PPBot {
                 var scoreHomeId = (int)token["cols"]["score_home"];
                 var homeCoachId = (int)token["cols"]["coach_name_home"];
                 var awayCoachId = (int)token["cols"]["coach_name_away"];
-                var newestRound = 0;
+                var newestRound = 99999;
                 var longestHomeCoach = 0;
                 var longestHomeTeam = 0;
                 var longestAwayCoach = 0;
                 var longestAwayTeam = 0;
                 foreach(var row in token["rows"]) {
                     var values = row.Values<string>();
-                    if(values.ToList<string>()[scoreHomeId].Length > 0) {
+                    if(values.ToList<string>()[scoreHomeId].Length == 0) {
 
                         var rowRound = values.ToList<string>()[roundId];
-                        if(int.Parse(rowRound) > newestRound) {
+                        if(int.Parse(rowRound) < newestRound) {
                             newestRound = int.Parse(rowRound);
                         }
                     }
