@@ -87,7 +87,6 @@ namespace PPBot {
                 var homeTeamId = (int)token["cols"]["team_name_home"];
                 var awayTeamId = (int)token["cols"]["team_name_away"];
                 var scoreHomeId = (int)token["cols"]["score_home"];
-                var scoreAwayId = (int)token["cols"]["score_away"];
                 var homeCoachId = (int)token["cols"]["coach_name_home"];
                 var awayCoachId = (int)token["cols"]["coach_name_away"];
                 var newestRound = 0;
@@ -135,10 +134,9 @@ namespace PPBot {
                     var values = row.Values<string>();
                     var valueList = values.ToList<string>();
                     var scoreHome = valueList[scoreHomeId];
-                    var scoreAway = valueList[scoreAwayId];
                     var rowRound = valueList[roundId];
-                    if(int.Parse(rowRound) == newestRound) {
-                        sb.AppendLine(String.Format("{0," + longestHomeCoach + "} {1," + longestHomeTeam + "} {2,1} vs {3,1} {4," + longestAwayTeam + "} {5," + longestAwayCoach + "}", valueList[homeCoachId], valueList[homeTeamId], scoreHome, scoreAway, valueList[awayTeamId], valueList[awayCoachId]));
+                    if(int.Parse(rowRound) == newestRound && scoreHome.Length == 0) {
+                        sb.AppendLine(String.Format("{0," + longestHomeCoach + "} {1," + longestHomeTeam + "} vs {2," + longestAwayTeam + "} {3," + longestAwayCoach + "}", valueList[homeCoachId], valueList[homeTeamId], valueList[awayTeamId], valueList[awayCoachId]));
                     }
                 }
 
