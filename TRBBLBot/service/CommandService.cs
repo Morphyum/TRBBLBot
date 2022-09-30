@@ -137,11 +137,11 @@ namespace TRBBLBot.service {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("Standings - " + comp + " - Day " + scheduleService.getNewestRound(filtered));
             sb.AppendLine();
-            sb.AppendLine(String.Format("{0,5} | {1," + longestTeam + "} | {2," + longestCoach + "} | {3,6} | {4,5} | {5,5} | {6,5} | {7,6} | {8,3}", "Place", "Team", "Coach", "Points", "Games", "Wins", "Draws", "Losses", "TDD"));
+            sb.AppendLine(String.Format("{0,5} | {1," + longestTeam + "} | {2," + longestCoach + "} | {3,6} | {4,5} | {5,4} | {6,5} | {7,6} | {8,3}", "Place", "Team", "Coach", "Points", "Games", "Wins", "Draws", "Losses", "TDD"));
             sb.AppendLine();
             int place = 1;
             foreach(var team in standings.Teams) {
-                sb.AppendLine(String.Format("{0,5} | {1," + longestTeam + "} | {2," + longestCoach + "} | {3,6} | {4,5}| {5,5} | {6,5} | {7,6} | {8,3}", place, team.Name, team.Coach, team.Points, team.Games, team.Wins, team.Draws, team.Loses, team.TDD));
+                sb.AppendLine(String.Format("{0,5} | {1," + longestTeam + "} | {2," + longestCoach + "} | {3,6} | {4,5} | {5,4} | {6,5} | {7,6} | {8,3}", place, team.Name, team.Coach, team.Points, team.Games, team.Wins, team.Draws, team.Loses, team.TDD));
                 place++;
             }
             return Format.Code(sb.ToString());
