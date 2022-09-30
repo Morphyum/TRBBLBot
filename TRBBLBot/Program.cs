@@ -46,13 +46,19 @@ namespace PPBot {
 
         }
         private async Task SlashCommandExecuted(SocketSlashCommand command) {
-            if(command.CommandName.Equals("set-welcome")) {
-                await command.RespondWithModalAsync(commandService.handleSetWelcome());
-            } else if(command.CommandName.Equals("schedule")) {
-                await command.RespondAsync(await commandService.handleScheduleAsync(command));
+            switch(command.CommandName) {
+                case "set-welcome":
+                    await command.RespondWithModalAsync(commandService.handleSetWelcome());
+                    break;
+                case "schedule":
+                    await command.RespondAsync(await commandService.handleScheduleAsync(command));
+                    break;
+                case "standings":
+                    await command.RespondAsync(await commandService.handleStandings(command));
+                    break;
+                default:
+                    break;
             }
-
-
         }
 
         private async Task UserJoined(SocketGuildUser arg) {

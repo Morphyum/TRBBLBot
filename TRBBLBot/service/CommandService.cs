@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using TRBBLBot.entity;
 
 namespace TRBBLBot.service {
     public class CommandService {
@@ -46,29 +47,15 @@ namespace TRBBLBot.service {
         }
 
         public async Task<string> handleScheduleAsync(SocketSlashCommand command) {
-            var url = string.Format("https://www.mordrek.com:666/api/comp/id/schedule");
             var comp = (string)command.Data.Options.ToList().First().Value;
-            url = url.Replace("id", comp);
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-            var jsonString = await client.GetStringAsync(url);
-            var token = JToken.Parse(jsonString);
-            var schedules = scheduleService.convertToSchedules(token);
-            var filtered = scheduleService.filterCurrentSeason(schedules);
+            var filtered = scheduleService.filterCurrentSeason(await scheduleService.getSchedulesAsync(comp));
 
-            var newestRound = 99999;
+            var newestRound = scheduleService.getNewestRound(filtered);
             var longestHomeCoach = 0;
             var longestHomeTeam = 0;
             var longestAwayCoach = 0;
             var longestAwayTeam = 0;
 
-            foreach(var schedule in filtered) {
-                if(schedule.ScoreHome.Length == 0) {
-                    if(int.Parse(schedule.Round) < newestRound) {
-                        newestRound = int.Parse(schedule.Round);
-                    }
-                }
-            }
             foreach(var schedule in filtered) {
                 if(int.Parse(schedule.Round) == newestRound) {
                     var homeCoach = schedule.CoachNameHome.Length;
@@ -97,11 +84,68 @@ namespace TRBBLBot.service {
                 var scoreHome = schedule.ScoreHome;
                 var rowRound = schedule.Round;
                 if(int.Parse(rowRound) == newestRound) {
-                    sb.AppendLine(String.Format("{0," + longestHomeCoach + "} {1," + longestHomeTeam + "} {2,1} vs {3,1} {4," + longestAwayTeam + "} {5," + longestAwayCoach + "}", schedule.CoachNameHome, schedule.TeamNameHome, schedule.ScoreHome, schedule.ScoreAway, schedule.TeamNameAway, schedule.CoachNameAway));
+                    sb.AppendLine(String.Format("{0," + longestHomeCoach + "}  {1," + longestHomeTeam + "}  {2,1} vs {3,1}  {4," + longestAwayTeam + "}  {5," + longestAwayCoach + "}", schedule.CoachNameHome, schedule.TeamNameHome, schedule.ScoreHome, schedule.ScoreAway, schedule.TeamNameAway, schedule.CoachNameAway));
                 }
             }
             return Format.Code(sb.ToString());
         }
-    }
 
+        public async Task<string> handleStandings(SocketSlashCommand command) {
+            var standings = new Standings();
+            var comp = (string)command.Data.Options.ToList().First().Value;
+            var filtered = scheduleService.filterCurrentSeason(await scheduleService.getSchedulesAsync(comp));
+
+            foreach(var schedule in filtered) {
+                var homeTeam = standings.Teams.FirstOrDefault(t => t.Name.Equals(schedule.TeamNameHome));
+                var awayTeam = standings.Teams.FirstOrDefault(t => t.Name.Equals(schedule.TeamNameAway));
+                if(homeTeam == null) {
+                    homeTeam = standings.CreateTeam(schedule.TeamNameHome, schedule.CoachNameHome);
+                }
+                if(awayTeam == null) {
+                    awayTeam = standings.CreateTeam(schedule.TeamNameAway, schedule.CoachNameAway);
+                }
+                if(schedule.ScoreHome.Length > 0) {
+                    var matchHomeScore = int.Parse(schedule.ScoreHome);
+                    var matchAwayScore = int.Parse(schedule.ScoreAway);
+                    homeTeam.Score += matchHomeScore;
+                    awayTeam.Score += matchAwayScore;
+                    if(matchHomeScore > matchAwayScore) {
+                        homeTeam.Wins++;
+                        awayTeam.Loses++;
+                    } else if(matchHomeScore == matchAwayScore) {
+                        homeTeam.Draws++;
+                        awayTeam.Draws++;
+                    } else if(matchHomeScore < matchAwayScore) {
+                        homeTeam.Loses++;
+                        awayTeam.Wins++;
+                    }
+                }
+            }
+            standings.Teams = standings.Teams.OrderByDescending(t => t.Points).ThenByDescending(t => t.TDD).ToList();
+
+            var longestCoach = "Coach".Length;
+            var longestTeam = "Team".Length;
+            foreach(var team in standings.Teams) {
+                if(team.Coach.Length > longestCoach) {
+                    longestCoach = team.Coach.Length;
+                }
+                if(team.Name.Length > longestTeam) {
+                    longestTeam = team.Name.Length;
+                }
+            }
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("Standings - " + comp + " - Day " + scheduleService.getNewestRound(filtered));
+            sb.AppendLine();
+            sb.AppendLine(String.Format("{0,5} | {1," + longestTeam + "} | {2," + longestCoach + "} | {3,6} | {4,5} | {5,5} | {6,5} | {7,5} | {8,3}", "Place", "Team", "Coach", "Points", "Games", "Wins", "Draws", "Loses", "TDD"));
+            sb.AppendLine();
+            int place = 1;
+            foreach(var team in standings.Teams) {
+                sb.AppendLine(String.Format("{0,5} | {1," + longestTeam + "} | {2," + longestCoach + "} | {3,6} | {4,5}| {5,5} | {6,5} | {7,5} | {8,3}", place, team.Name, team.Coach, team.Points, team.Games, team.Wins, team.Draws, team.Loses, team.TDD));
+                place++;
+            }
+            return Format.Code(sb.ToString());
+        }
+
+    }
 }

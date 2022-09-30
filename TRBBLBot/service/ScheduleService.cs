@@ -1,12 +1,21 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using TRBBLBot.entity;
 
 namespace TRBBLBot.service {
     public class ScheduleService {
 
-        public List<Schedule> convertToSchedules(JToken token) {
+        public async Task<List<Schedule>> getSchedulesAsync(string comp) {
+            var url = string.Format("https://www.mordrek.com:666/api/comp/id/schedule");
+            url = url.Replace("id", comp);
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            var jsonString = await client.GetStringAsync(url);
+            var token = JToken.Parse(jsonString);
+
             var schedules = new List<Schedule>();
 
             var idmatch = (int)token["cols"]["idmatch"];
@@ -62,6 +71,18 @@ namespace TRBBLBot.service {
             return schedules;
         }
 
+        public int getNewestRound(List<Schedule> filtered) {
+            var newestRound = 9999;
+            foreach(var schedule in filtered) {
+                if(schedule.ScoreHome.Length == 0) {
+                    if(int.Parse(schedule.Round) < newestRound) {
+                        newestRound = int.Parse(schedule.Round);
+                    }
+                }
+            }
+            return newestRound;
+        }
+
         public List<Schedule> filterCurrentSeason(List<Schedule> allSchedules) {
             var filteredSchedules = new List<Schedule>();
 
@@ -78,5 +99,7 @@ namespace TRBBLBot.service {
             }
             return filteredSchedules;
         }
+
+
     }
 }
