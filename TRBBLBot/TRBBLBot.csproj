@@ -101,11 +101,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="dto\FixMatchDto.cs" />
     <Compile Include="entity\Schedule.cs" />
     <Compile Include="entity\Standings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Secret.cs" />
+    <Compile Include="service\SelectMenuService.cs" />
     <Compile Include="service\CommandService.cs" />
     <Compile Include="service\ModalService.cs" />
     <Compile Include="service\ScheduleService.cs" />

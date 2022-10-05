@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using System;
 using System.Linq;
 
 namespace TRBBLBot.service {
@@ -21,6 +22,10 @@ namespace TRBBLBot.service {
                 .WithAuthor(modal.User)
                 .WithCurrentTimestamp();
             return embeded.Build();
+        }
+
+        internal string handleFixMatch(SocketModal modal) {
+            //TODO save match to List and implement check for saved matches on schedule and standings.
         }
     }
 }

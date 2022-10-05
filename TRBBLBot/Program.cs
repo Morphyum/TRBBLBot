@@ -1,8 +1,10 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using TRBBLBot.dto;
 using TRBBLBot.service;
 
 namespace PPBot {
@@ -11,7 +13,8 @@ namespace PPBot {
         private CommandService commandService = new CommandService();
         private WelcomeService welcomeService = new WelcomeService();
         private ModalService modalService = new ModalService();
-        
+        private SelectMenuService selectMenuService = new SelectMenuService();
+
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
 
@@ -27,6 +30,7 @@ namespace PPBot {
             client.UserJoined += UserJoined;
             client.SlashCommandExecuted += SlashCommandExecuted;
             client.ModalSubmitted += ModalSubmitted;
+            client.SelectMenuExecuted += SelectMenuExecuted;
             var token = Secret.token; // Remember to keep this private!
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
@@ -42,9 +46,17 @@ namespace PPBot {
         private async Task ModalSubmitted(SocketModal modal) {
             if(modal.Data.CustomId.Equals("welcome_message_modal")) {
                 await modal.RespondAsync(embed: modalService.handleSetWelcomeMessage(modal));
+            } else if(modal.Data.CustomId.Equals("fix_match_modal")) {
+                await modal.RespondAsync(modalService.handleFixMatch(modal));
             }
-
         }
+
+        public async Task SelectMenuExecuted(SocketMessageComponent component) {
+            if(component.Data.CustomId.Equals("match_menu")) {
+                await component.RespondWithModalAsync(await selectMenuService.handleFixMatchAsync(JsonConvert.DeserializeObject<FixMatchDto>(string.Join(", ", component.Data.Values))));
+            }
+        }
+
         private async Task SlashCommandExecuted(SocketSlashCommand command) {
             switch(command.CommandName) {
                 case "set-welcome":
@@ -55,6 +67,15 @@ namespace PPBot {
                     break;
                 case "standings":
                     await command.RespondAsync(await commandService.handleStandings(command));
+                    break;
+                case "fix-match":
+                    var component = await commandService.handleFixMatchAsync(command);
+                    if(component != null) {
+                        await command.RespondAsync("What match do you want to fix?", components: component);
+                    } else {
+                        await command.RespondAsync("No open matches found for this competition");
+                    }
+
                     break;
                 default:
                     break;

@@ -1,11 +1,11 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
+using TRBBLBot.dto;
 using TRBBLBot.entity;
 
 namespace TRBBLBot.service {
@@ -35,15 +35,48 @@ namespace TRBBLBot.service {
             command = globalCommand.Build();
             applicationCommandProperties.Add(command);
 
+            globalCommand = new SlashCommandBuilder();
+            globalCommand.WithName("fix-match");
+            globalCommand.WithDescription("Let's you manually enter a result for a game that goblin failed to read");
+            globalCommand.AddOption("competition", ApplicationCommandOptionType.String, "The name of the competition", true);
+            command = globalCommand.Build();
+            applicationCommandProperties.Add(command);
+
             return applicationCommandProperties.ToArray();
         }
 
-        internal Modal handleSetWelcome() {
+        public Modal handleSetWelcome() {
             var mb = new ModalBuilder()
                     .WithTitle("Welcome Message")
                     .WithCustomId("welcome_message_modal")
                     .AddTextInput("New Welcome Message", "welcome_message_text", TextInputStyle.Paragraph);
             return mb.Build();
+        }
+
+        public async Task<MessageComponent> handleFixMatchAsync(SocketSlashCommand command) {
+            var comp = (string)command.Data.Options.ToList().First().Value;
+            var filtered = scheduleService.filterUnplayedMatches(scheduleService.filterCurrentSeason(await scheduleService.getSchedulesAsync(comp)));
+
+            if(filtered.Count > 0) {
+
+                var menuBuilder = new SelectMenuBuilder()
+                    .WithPlaceholder("Select a match")
+                    .WithCustomId("match_menu").WithMinValues(1)
+                    .WithMaxValues(1);
+                foreach(var schedule in filtered) {
+                    FixMatchDto dto = new FixMatchDto();
+                    dto.Competition = comp;
+                    dto.ScheduleId = schedule.ScheduleOriginId;
+                    menuBuilder.AddOption(schedule.TeamNameHome + " vs " + schedule.TeamNameAway, JsonConvert.SerializeObject(dto), "Day: " + schedule.Round);
+                }
+
+                var builder = new ComponentBuilder()
+                    .WithSelectMenu(menuBuilder);
+
+                return builder.Build();
+            }
+
+            return null;
         }
 
         public async Task<string> handleScheduleAsync(SocketSlashCommand command) {

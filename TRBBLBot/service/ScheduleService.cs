@@ -100,6 +100,17 @@ namespace TRBBLBot.service {
             return filteredSchedules;
         }
 
+        public List<Schedule> filterUnplayedMatches(List<Schedule> allSchedules) {
+            var filteredSchedules = new List<Schedule>();
+
+            foreach(var schedule in allSchedules) {
+                if(schedule.ScoreHome.Length == 0 || schedule.ScoreAway.Length == null) {
+                    filteredSchedules.Add(schedule);
+                } 
+            }
+            return filteredSchedules;
+        }
+
 
     }
 }
