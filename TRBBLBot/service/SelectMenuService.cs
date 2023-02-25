@@ -5,9 +5,15 @@ using System.Threading.Tasks;
 
 namespace TRBBLBot.service {
     public class SelectMenuService {
-        private ScheduleService scheduleService = new ScheduleService();
+        private ScheduleService scheduleService;
+
+        public ScheduleService ScheduleService {
+            get => scheduleService;
+            set => scheduleService = value;
+        }
+
         public async Task<Modal> handleFixMatchAsync(FixMatchDto dto) {
-            var schedule = await scheduleService.getSchedulesAsync(dto.Competition);
+            var schedule = await ScheduleService.getSchedulesAsync(dto.Competition);
             var match = schedule.Find(m => m.ScheduleOriginId.Equals(dto.ScheduleId));
 
             var mb = new ModalBuilder()

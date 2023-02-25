@@ -2,14 +2,19 @@
 using Discord.WebSocket;
 using System;
 using System.Linq;
+using TRBBLBot.repository;
 
 namespace TRBBLBot.service {
     public class ModalService {
         private WelcomeService welcomeService;
-
+        private IFixMatchRepository fixMatchRepository;
         public WelcomeService WelcomeService {
             get => welcomeService;
             set => welcomeService = value;
+        }
+        internal IFixMatchRepository FixMatchRepository {
+            get => fixMatchRepository;
+            set => fixMatchRepository = value;
         }
 
         public Embed handleSetWelcomeMessage(SocketModal modal) {
@@ -25,7 +30,12 @@ namespace TRBBLBot.service {
         }
 
         internal string handleFixMatch(SocketModal modal) {
-            //TODO save match to List and implement check for saved matches on schedule and standings.
+          /*  .AddTextInput("ScheduleId(DO NOT CHANGE)", "schedule_id", TextInputStyle.Short, "new score", 0, 99, false, match.ScheduleOriginId)
+                     .AddTextInput(match.TeamNameHome, "home_score", TextInputStyle.Short, "new score", 1, 2, true)
+                     .AddTextInput(match.TeamNameAway, "away_score", TextInputStyle.Short, "new score", 1, 2, true);*/
+
+
+            FixMatchRepository.AddFixMatch();
         }
     }
 }

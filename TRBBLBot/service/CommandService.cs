@@ -10,7 +10,12 @@ using TRBBLBot.entity;
 
 namespace TRBBLBot.service {
     public class CommandService {
-        private ScheduleService scheduleService = new ScheduleService();
+        private ScheduleService scheduleService;
+
+        public ScheduleService ScheduleService {
+            get => scheduleService;
+            set => scheduleService = value;
+        }
 
         public ApplicationCommandProperties[] createCommands() {
             List<ApplicationCommandProperties> applicationCommandProperties = new List<ApplicationCommandProperties>();
@@ -55,7 +60,7 @@ namespace TRBBLBot.service {
 
         public async Task<MessageComponent> handleFixMatchAsync(SocketSlashCommand command) {
             var comp = (string)command.Data.Options.ToList().First().Value;
-            var filtered = scheduleService.filterUnplayedMatches(scheduleService.filterCurrentSeason(await scheduleService.getSchedulesAsync(comp)));
+            var filtered = ScheduleService.filterUnplayedMatches(ScheduleService.filterCurrentSeason(await ScheduleService.getSchedulesAsync(comp)));
 
             if(filtered.Count > 0) {
 
@@ -81,9 +86,9 @@ namespace TRBBLBot.service {
 
         public async Task<string> handleScheduleAsync(SocketSlashCommand command) {
             var comp = (string)command.Data.Options.ToList().First().Value;
-            var filtered = scheduleService.filterCurrentSeason(await scheduleService.getSchedulesAsync(comp));
+            var filtered = ScheduleService.filterCurrentSeason(await ScheduleService.getSchedulesAsync(comp));
 
-            var newestRound = scheduleService.getNewestRound(filtered);
+            var newestRound = ScheduleService.getNewestRound(filtered);
             var longestHomeCoach = 0;
             var longestHomeTeam = 0;
             var longestAwayCoach = 0;
@@ -126,7 +131,7 @@ namespace TRBBLBot.service {
         public async Task<string> handleStandings(SocketSlashCommand command) {
             var standings = new Standings();
             var comp = (string)command.Data.Options.ToList().First().Value;
-            var filtered = scheduleService.filterCurrentSeason(await scheduleService.getSchedulesAsync(comp));
+            var filtered = ScheduleService.filterCurrentSeason(await ScheduleService.getSchedulesAsync(comp));
 
             foreach(var schedule in filtered) {
                 var homeTeam = standings.Teams.FirstOrDefault(t => t.Name.Equals(schedule.TeamNameHome));
@@ -168,7 +173,7 @@ namespace TRBBLBot.service {
             }
 
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("Standings - " + comp + " - Day " + scheduleService.getNewestRound(filtered));
+            sb.AppendLine("Standings - " + comp + " - Day " + ScheduleService.getNewestRound(filtered));
             sb.AppendLine();
             sb.AppendLine(String.Format("{0,5} | {1," + longestTeam + "} | {2," + longestCoach + "} | {3,6} | {4,5} | {5,4} | {6,5} | {7,6} | {8,3}", "Place", "Team", "Coach", "Points", "Games", "Wins", "Draws", "Losses", "TDD"));
             sb.AppendLine();

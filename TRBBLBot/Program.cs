@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using TRBBLBot.dto;
+using TRBBLBot.repository;
 using TRBBLBot.service;
 
 namespace PPBot {
@@ -13,24 +14,33 @@ namespace PPBot {
         private CommandService commandService = new CommandService();
         private WelcomeService welcomeService = new WelcomeService();
         private ModalService modalService = new ModalService();
+        private ScheduleService scheduleService = new ScheduleService();
         private SelectMenuService selectMenuService = new SelectMenuService();
+
+        private FixMatchFileRepository fixMatchFileRepository = new FixMatchFileRepository();
 
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
 
         public async Task MainAsync() {
             modalService.WelcomeService = welcomeService;
+            modalService.FixMatchRepository = fixMatchFileRepository;
+            commandService.ScheduleService = scheduleService;
+            selectMenuService.ScheduleService = scheduleService;
+
+            welcomeService.LoadWelcome();
+
             var config = new DiscordSocketConfig() {
                 GatewayIntents = GatewayIntents.All
             };
             client = new DiscordSocketClient(config);
-            welcomeService.LoadWelcome();
             client.Ready += Ready;
             client.Log += Log;
             client.UserJoined += UserJoined;
             client.SlashCommandExecuted += SlashCommandExecuted;
             client.ModalSubmitted += ModalSubmitted;
             client.SelectMenuExecuted += SelectMenuExecuted;
+
             var token = Secret.token; // Remember to keep this private!
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
